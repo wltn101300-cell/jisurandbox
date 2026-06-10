@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>지수 랜덤박스</title>
+<style>
+body{
+font-family:sans-serif;
+text-align:center;
+background:#fdf6ff;
+padding:50px;
+}
+button{
+font-size:20px;
+padding:15px 30px;
+}
+#result{
+margin-top:30px;
+font-size:30px;
+font-weight:bold;
+}
+</style>
+</head>
+<body>
+
+<h1>🎁 지수 랜덤박스 🎁</h1>
+
+<button onclick="openBox()">상자 개봉</button>
+
+<div id="result"></div>
+
+<script>
+
+const prizes = [
+"꽝",
+"아메리카노",
+"DJ닉변",
+"방송소환권",
+"손편지",
+"배민 5만원권"
+];
+
+function openBox(){
+
+const reward =
+prizes[Math.floor(Math.random()*prizes.length)];
+
+document.getElementById("result").innerHTML =
+"🎉 " + reward;
+
+}
+
+</script>
+
+</body>
+</html>
