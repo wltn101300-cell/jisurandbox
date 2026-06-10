@@ -1,56 +1,122 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>지수 랜덤박스</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>지수 랜덤박스 PRO</title>
 <style>
-body{
-font-family:sans-serif;
-text-align:center;
-background:#fdf6ff;
-padding:50px;
-}
-button{
-font-size:20px;
-padding:15px 30px;
-}
-#result{
-margin-top:30px;
-font-size:30px;
-font-weight:bold;
-}
+body{font-family:Arial,sans-serif;background:#fff5fa;padding:20px}
+h1{color:#ff4fa0;text-align:center}
+.wrap{max-width:1000px;margin:auto}
+input,button{padding:10px;font-size:16px}
+button{cursor:pointer}
+#result{margin-top:20px;font-size:24px;font-weight:bold}
+table{width:100%;border-collapse:collapse;margin-top:20px;background:white}
+td,th{border:1px solid #ddd;padding:8px}
+.stats{margin:15px 0}
 </style>
 </head>
 <body>
+<div class="wrap">
+<h1>🎁 지수 랜덤박스 PRO 🎁</h1>
 
-<h1>🎁 지수 랜덤박스 🎁</h1>
+닉네임 <input id="nick">
+번호 <input id="num" type="number" min="1" max="100">
+<button onclick="openBox()">개봉</button>
+<button onclick="downloadCSV()">CSV 다운로드</button>
 
-<button onclick="openBox()">상자 개봉</button>
+<div class="stats">
+<span id="remain"></span>
+</div>
 
 <div id="result"></div>
 
+<table>
+<thead><tr><th>닉네임</th><th>번호</th><th>상품</th></tr></thead>
+<tbody id="log"></tbody>
+</table>
+</div>
+
 <script>
+const KEY="jisu_box_pro";
 
-const prizes = [
-"꽝",
-"아메리카노",
-"DJ닉변",
-"방송소환권",
-"손편지",
-"배민 5만원권"
-];
-
-function openBox(){
-
-const reward =
-prizes[Math.floor(Math.random()*prizes.length)];
-
-document.getElementById("result").innerHTML =
-"🎉 " + reward;
-
+function buildRewards(){
+ let r=[
+ "수제향수","배민 5만원권","소고기",
+ "커피기프티콘 1만원","커피기프티콘 1만원","커피기프티콘 1만원",
+ "손편지","손편지","역팬 100개","역팬 100개",
+ "아메리카노","아메리카노","아메리카노","아메리카노","아메리카노",
+ "DJ닉변","DJ닉변","DJ닉변",
+ "방송소환권","방송소환권","방송소환권","방송소환권"
+ ];
+ while(r.length<100) r.push("꽝");
+ for(let i=r.length-1;i>0;i--){
+   const j=Math.floor(Math.random()*(i+1));
+   [r[i],r[j]]=[r[j],r[i]];
+ }
+ return r;
 }
 
-</script>
+let data=JSON.parse(localStorage.getItem(KEY));
+if(!data){
+ data={rewards:buildRewards(),opened:[],logs:[]};
+ localStorage.setItem(KEY,JSON.stringify(data));
+}
 
+function speak(text){
+ const u=new SpeechSynthesisUtterance(text);
+ u.lang="ko-KR";
+ speechSynthesis.speak(u);
+}
+
+function save(){
+ localStorage.setItem(KEY,JSON.stringify(data));
+ render();
+}
+
+function render(){
+ document.getElementById("remain").innerText=
+ `개봉 ${data.opened.length}/100 | 남은 상자 ${100-data.opened.length}`;
+
+ const tb=document.getElementById("log");
+ tb.innerHTML="";
+ data.logs.forEach(x=>{
+  tb.innerHTML+=`<tr><td>${x.nick}</td><td>${x.num}</td><td>${x.reward}</td></tr>`;
+ });
+}
+
+function openBox(){
+ const nick=document.getElementById("nick").value||"익명";
+ const num=parseInt(document.getElementById("num").value);
+
+ if(!num||num<1||num>100){alert("1~100");return;}
+ if(data.opened.includes(num)){alert("이미 개봉");return;}
+
+ const reward=data.rewards[num-1];
+ data.opened.push(num);
+ data.logs.unshift({nick,num,reward});
+
+ document.getElementById("result").innerHTML=
+ `📦 ${nick}님, ${num}번 상자 개봉!<br>🎁 ${reward}`;
+
+ speak(`${nick}님, ${num}번 상자 개봉. ${reward} 당첨!`);
+
+ save();
+}
+
+function downloadCSV(){
+ let csv="닉네임,번호,상품\n";
+ data.logs.forEach(x=>{
+  csv+=`${x.nick},${x.num},${x.reward}\n`;
+ });
+ const blob=new Blob([csv],{type:"text/csv"});
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download="jisu_randombox_logs.csv";
+ a.click();
+}
+
+render();
+</script>
 </body>
 </html>
